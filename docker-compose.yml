@@ -1,0 +1,76 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: scheduler-db
+    environment:
+      POSTGRES_DB: scheduler
+      POSTGRES_USER: scheduler
+      POSTGRES_PASSWORD: scheduler_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scheduler"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  scheduler-node-1:
+    build: .
+    container_name: scheduler-node-1
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: scheduler
+      PGUSER: scheduler
+      PGPASSWORD: scheduler_pass
+      SERVER_PORT: 8080
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin123
+      NODE_HOSTNAME: scheduler-node-1
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  scheduler-node-2:
+    build: .
+    container_name: scheduler-node-2
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: scheduler
+      PGUSER: scheduler
+      PGPASSWORD: scheduler_pass
+      SERVER_PORT: 8081
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin123
+      NODE_HOSTNAME: scheduler-node-2
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    image: node:20-alpine
+    container_name: scheduler-frontend
+    working_dir: /app
+    volumes:
+      - ./artifacts/frontend:/app
+    command: sh -c "npm install -g pnpm && pnpm install && pnpm run build && pnpm dlx serve dist -p 3000"
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_URL: http://localhost:8080
+    depends_on:
+      - scheduler-node-1
+
+volumes:
+  postgres_data:
