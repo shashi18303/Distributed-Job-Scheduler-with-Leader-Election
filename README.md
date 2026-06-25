@@ -1,3 +1,4 @@
+<img width="3349" height="2149" alt="distributed_scheduler" src="https://github.com/user-attachments/assets/a6771ee5-d481-4d6e-81d8-0bcfd73d4ba4" />
 System Architecture
                 Client/Admin
                       |
@@ -94,3 +95,25 @@ Follower becomes Leader
           |
           v
 Jobs continue running
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
